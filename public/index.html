@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Musica - MP3 Converter</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      min-height: 100vh;
+      color: #fff;
+    }
+    header {
+      text-align: center;
+      padding: 40px 20px 20px;
+    }
+    header h1 {
+      font-size: 2.5rem;
+      background: linear-gradient(90deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    header p {
+      color: #aaa;
+      margin-top: 8px;
+      font-size: 1rem;
+    }
+    .container {
+      display: flex;
+      gap: 30px;
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    .panel {
+      flex: 1;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 35px;
+      backdrop-filter: blur(10px);
+      transition: transform 0.2s;
+    }
+    .panel:hover { transform: translateY(-2px); }
+    .panel-icon {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+    .panel h2 {
+      font-size: 1.4rem;
+      margin-bottom: 8px;
+    }
+    .panel p.subtitle {
+      color: #999;
+      font-size: 0.9rem;
+      margin-bottom: 25px;
+    }
+    .input-group {
+      margin-bottom: 20px;
+    }
+    .input-group label {
+      display: block;
+      font-size: 0.85rem;
+      color: #ccc;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 14px 18px;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 12px;
+      background: rgba(0,0,0,0.3);
+      color: #fff;
+      font-size: 1rem;
+      outline: none;
+      transition: border 0.2s;
+    }
+    input[type="text"]:focus {
+      border-color: #7c5cfc;
+    }
+    input[type="text"]::placeholder {
+      color: #666;
+    }
+    .upload-zone {
+      border: 2px dashed rgba(255,255,255,0.2);
+      border-radius: 14px;
+      padding: 40px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: rgba(0,0,0,0.15);
+      position: relative;
+    }
+    .upload-zone:hover, .upload-zone.dragover {
+      border-color: #7c5cfc;
+      background: rgba(124,92,252,0.08);
+    }
+    .upload-zone .upload-icon {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+    .upload-zone p {
+      color: #999;
+      font-size: 0.9rem;
+    }
+    .upload-zone .browse {
+      color: #7c5cfc;
+      font-weight: 600;
+      text-decoration: underline;
+    }
+    .upload-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+    .file-name {
+      margin-top: 10px;
+      color: #48dbfb;
+      font-size: 0.9rem;
+      display: none;
+      word-break: break-all;
+    }
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: #fff;
+      margin-top: 10px;
+    }
+    .btn-purple {
+      background: linear-gradient(135deg, #7c5cfc, #a855f7);
+    }
+    .btn-purple:hover { opacity: 0.9; transform: scale(1.01); }
+    .btn-green {
+      background: linear-gradient(135deg, #10b981, #059669);
+    }
+    .btn-green:hover { opacity: 0.9; transform: scale(1.01); }
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .progress {
+      margin-top: 15px;
+      display: none;
+    }
+    .progress-bar-bg {
+      width: 100%;
+      height: 6px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #7c5cfc, #a855f7);
+      border-radius: 3px;
+      width: 0%;
+      transition: width 0.3s;
+    }
+    .progress-text {
+      font-size: 0.8rem;
+      color: #aaa;
+      margin-top: 6px;
+      text-align: center;
+    }
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .result {
+      margin-top: 20px;
+      display: none;
+      text-align: center;
+      padding: 20px;
+      background: rgba(16,185,129,0.1);
+      border: 1px solid rgba(16,185,129,0.3);
+      border-radius: 12px;
+    }
+    .result .check {
+      font-size: 2rem;
+      margin-bottom: 8px;
+    }
+    .result p {
+      color: #10b981;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .download-btn {
+      display: inline-block;
+      padding: 10px 28px;
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff;
+      text-decoration: none;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: opacity 0.2s;
+    }
+    .download-btn:hover { opacity: 0.85; }
+    .error-msg {
+      margin-top: 15px;
+      display: none;
+      padding: 12px 16px;
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 10px;
+      color: #ef4444;
+      font-size: 0.9rem;
+      text-align: center;
+    }
+    footer {
+      text-align: center;
+      padding: 40px 20px;
+      color: #555;
+      font-size: 0.85rem;
+    }
+    @media (max-width: 768px) {
+      .container { flex-direction: column; }
+      header h1 { font-size: 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Musica</h1>
+    <p>Convert any video or link to MP3 instantly</p>
+  </header>
+
+  <div class="container">
+    <!-- URL to MP3 Panel -->
+    <div class="panel">
+      <div class="panel-icon">&#127925;</div>
+      <h2>URL to MP3</h2>
+      <p class="subtitle">Paste a YouTube, SoundCloud, or any supported URL</p>
+
+      <div class="input-group">
+        <label for="urlInput">Video / Audio URL</label>
+        <input type="text" id="urlInput" placeholder="https://youtube.com/watch?v=..." autocomplete="off">
+      </div>
+
+      <button class="btn btn-purple" id="urlBtn" onclick="convertUrl()">
+        Convert to MP3
+      </button>
+
+      <div class="progress" id="urlProgress">
+        <div class="progress-bar-bg"><div class="progress-bar" id="urlProgressBar"></div></div>
+        <div class="progress-text" id="urlProgressText">Downloading and converting...</div>
+      </div>
+
+      <div class="result" id="urlResult">
+        <div class="check">&#9989;</div>
+        <p>Conversion successful!</p>
+        <a class="download-btn" id="urlDownloadBtn" href="#" download>Download MP3</a>
+      </div>
+
+      <div class="error-msg" id="urlError"></div>
+    </div>
+
+    <!-- Video to MP3 Panel -->
+    <div class="panel">
+      <div class="panel-icon">&#127909;</div>
+      <h2>Video to MP3</h2>
+      <p class="subtitle">Upload a video file and extract audio as MP3</p>
+
+      <div class="input-group">
+        <label>Video File</label>
+        <div class="upload-zone" id="uploadZone">
+          <input type="file" id="videoInput" accept="video/*">
+          <div class="upload-icon">&#128228;</div>
+          <p>Drag & drop your video here or <span class="browse">browse</span></p>
+          <p style="font-size:0.75rem;color:#666;margin-top:6px;">MP4, MKV, AVI, MOV, WebM &mdash; up to 2GB</p>
+          <div class="file-name" id="fileName"></div>
+        </div>
+      </div>
+
+      <button class="btn btn-green" id="videoBtn" onclick="convertVideo()" disabled>
+        Extract Audio
+      </button>
+
+      <div class="progress" id="videoProgress">
+        <div class="progress-bar-bg"><div class="progress-bar" id="videoProgressBar"></div></div>
+        <div class="progress-text" id="videoProgressText">Uploading and converting...</div>
+      </div>
+
+      <div class="result" id="videoResult">
+        <div class="check">&#9989;</div>
+        <p>Conversion successful!</p>
+        <a class="download-btn" id="videoDownloadBtn" href="#" download>Download MP3</a>
+      </div>
+
+      <div class="error-msg" id="videoError"></div>
+    </div>
+  </div>
+
+  <footer>
+    Musica &mdash; Free &amp; open-source MP3 converter. Your files are automatically deleted after download.
+  </footer>
+
+  <script>
+    let selectedFile = null;
+
+    const videoInput = document.getElementById("videoInput");
+    const uploadZone = document.getElementById("uploadZone");
+    const fileName = document.getElementById("fileName");
+
+    const ALLOWED_VIDEO_TYPES = [
+      "video/mp4", "video/x-matroska", "video/avi", "video/quicktime",
+      "video/webm", "video/x-flv", "video/x-ms-wmv", "video/x-m4v", "video/3gpp"
+    ];
+    const ALLOWED_VIDEO_EXTS = [".mp4", ".mkv", ".avi", ".mov", ".webm", ".flv", ".wmv", ".m4v", ".3gp"];
+
+    function isValidVideoFile(file) {
+      const ext = "." + file.name.split(".").pop().toLowerCase();
+      return ALLOWED_VIDEO_TYPES.includes(file.type) || ALLOWED_VIDEO_EXTS.includes(ext);
+    }
+
+    videoInput.addEventListener("change", (e) => {
+      if (e.target.files.length > 0) {
+        selectedFile = e.target.files[0];
+        if (!isValidVideoFile(selectedFile)) {
+          document.getElementById("videoError").textContent = "Only video files are allowed (MP4, MKV, AVI, MOV, WebM)";
+          document.getElementById("videoError").style.display = "block";
+          videoInput.value = "";
+          selectedFile = null;
+          fileName.style.display = "none";
+          document.getElementById("videoBtn").disabled = true;
+          return;
+        }
+        fileName.textContent = selectedFile.name;
+        fileName.style.display = "block";
+        document.getElementById("videoBtn").disabled = false;
+      }
+    });
+
+    uploadZone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      uploadZone.classList.add("dragover");
+    });
+    uploadZone.addEventListener("dragleave", () => uploadZone.classList.remove("dragover"));
+    uploadZone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      uploadZone.classList.remove("dragover");
+      if (e.dataTransfer.files.length > 0) {
+        const file = e.dataTransfer.files[0];
+        if (!isValidVideoFile(file)) {
+          document.getElementById("videoError").textContent = "Only video files are allowed (MP4, MKV, AVI, MOV, WebM)";
+          document.getElementById("videoError").style.display = "block";
+          selectedFile = null;
+          fileName.style.display = "none";
+          document.getElementById("videoBtn").disabled = true;
+          return;
+        }
+        selectedFile = file;
+        videoInput.files = e.dataTransfer.files;
+        fileName.textContent = selectedFile.name;
+        fileName.style.display = "block";
+        document.getElementById("videoBtn").disabled = false;
+      }
+    });
+
+    function hideAll(panel) {
+      document.getElementById(panel + "Progress").style.display = "none";
+      document.getElementById(panel + "Result").style.display = "none";
+      document.getElementById(panel + "Error").style.display = "none";
+      if (panel === "url") {
+        document.getElementById("urlProgressText").textContent = "Downloading and converting...";
+        document.getElementById("urlProgressBar").style.width = "0%";
+      } else {
+        document.getElementById("videoProgressText").textContent = "Uploading and converting...";
+        document.getElementById("videoProgressBar").style.width = "0%";
+      }
+    }
+
+    async function convertUrl() {
+      const url = document.getElementById("urlInput").value.trim();
+      if (!url) {
+        document.getElementById("urlError").textContent = "Please enter a URL";
+        document.getElementById("urlError").style.display = "block";
+        return;
+      }
+
+      hideAll("url");
+      const btn = document.getElementById("urlBtn");
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Converting...';
+      document.getElementById("urlProgress").style.display = "block";
+      document.getElementById("urlProgressBar").style.width = "30%";
+
+      try {
+        const res = await fetch("/api/url-to-mp3", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url }),
+        });
+
+        document.getElementById("urlProgressBar").style.width = "80%";
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error || "Conversion failed");
+
+        document.getElementById("urlProgressBar").style.width = "100%";
+        document.getElementById("urlProgressText").textContent = "Done!";
+
+        setTimeout(() => {
+          document.getElementById("urlProgress").style.display = "none";
+          document.getElementById("urlResult").style.display = "block";
+          const dlBtn = document.getElementById("urlDownloadBtn");
+          dlBtn.href = data.downloadUrl;
+          dlBtn.download = data.filename || "audio.mp3";
+        }, 500);
+      } catch (err) {
+        document.getElementById("urlProgress").style.display = "none";
+        document.getElementById("urlError").textContent = err.message;
+        document.getElementById("urlError").style.display = "block";
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = "Convert to MP3";
+      }
+    }
+
+    async function convertVideo() {
+      if (!selectedFile) return;
+
+      hideAll("video");
+      const btn = document.getElementById("videoBtn");
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Converting...';
+      document.getElementById("videoProgress").style.display = "block";
+      document.getElementById("videoProgressBar").style.width = "20%";
+
+      const formData = new FormData();
+      formData.append("video", selectedFile);
+
+      try {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", "/api/video-to-mp3");
+
+        xhr.upload.addEventListener("progress", (e) => {
+          if (e.lengthComputable) {
+            const pct = Math.round((e.loaded / e.total) * 60);
+            document.getElementById("videoProgressBar").style.width = pct + "%";
+            document.getElementById("videoProgressText").textContent =
+              `Uploading... ${Math.round(e.loaded / e.total * 100)}%`;
+          }
+        });
+
+        const data = await new Promise((resolve, reject) => {
+          xhr.onload = () => {
+            const resp = JSON.parse(xhr.responseText);
+            if (xhr.status >= 200 && xhr.status < 300) resolve(resp);
+            else reject(new Error(resp.error || "Conversion failed"));
+          };
+          xhr.onerror = () => reject(new Error("Network error"));
+          xhr.send(formData);
+        });
+
+        document.getElementById("videoProgressBar").style.width = "100%";
+        document.getElementById("videoProgressText").textContent = "Done!";
+
+        setTimeout(() => {
+          document.getElementById("videoProgress").style.display = "none";
+          document.getElementById("videoResult").style.display = "block";
+          const dlBtn = document.getElementById("videoDownloadBtn");
+          dlBtn.href = data.downloadUrl;
+          dlBtn.download = data.filename || "audio.mp3";
+        }, 500);
+      } catch (err) {
+        document.getElementById("videoProgress").style.display = "none";
+        document.getElementById("videoError").textContent = err.message;
+        document.getElementById("videoError").style.display = "block";
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = "Extract Audio";
+      }
+    }
+
+    document.getElementById("urlInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") convertUrl();
+    });
+  </script>
+</body>
+</html>
