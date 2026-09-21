@@ -4,7 +4,7 @@
 
 **iMusica** is a simple, fast, and modern web application that lets users convert YouTube video links into **MP3 audio** or **MP4 video** files.
 
-> 🎧 Paste a link. Choose a format. Download.
+> 🎧 Paste a link.    Choose a format. Download.
 
 ---
 
