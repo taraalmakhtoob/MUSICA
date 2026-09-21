@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 3000;
 
 // Linux commands inside the Vercel container
 const YTDLP_PATH = process.env.YTDLP_PATH || "yt-dlp";
-const FFMPEG_PATH = process.env.FFMPEG_PATH || "ffmpeg";
+const FFMPEG_PATH = process.env.FFMPEG_PATH || "/usr/bin/ffmpeg";
 
 const OUTPUT_DIR = path.join("/tmp", "musica-output");
 const UPLOADS_DIR = path.join("/tmp", "musica-uploads");
