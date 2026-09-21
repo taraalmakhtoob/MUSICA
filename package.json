@@ -1,12 +1,12 @@
 {
   "name": "musica",
   "version": "1.0.0",
-  "description": "URL to MP3 and Video to MP3 converter",
+  "description": "URL to MP3 and MP4 converter",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "build": "cd frontend && npm run build",
+    "build": "cd frontend && npm install && npm run build",
     "preview": "cd frontend && npm run dev"
   },
   "dependencies": {
