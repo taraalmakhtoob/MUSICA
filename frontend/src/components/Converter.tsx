@@ -62,7 +62,90 @@ export default function Converter() {
     setError('');
     setState('processing');
     setProgress(0);
+const handleUrlSubmit = async (e: FormEvent) => {
+  e.preventDefault();
 
+  const cleanUrl = url.trim();
+
+  if (!cleanUrl) return;
+
+  setError('');
+  setState('processing');
+  setProgress(0);
+
+  const timer = setInterval(() => {
+    setProgress((p) => {
+      const next = p + Math.random() * 4 + 1;
+      return next > 95 ? 95 : Math.round(next);
+    });
+  }, 350);
+
+  try {
+    const endpoint =
+      format === 'mp3'
+        ? '/api/url-to-mp3'
+        : '/api/url-to-mp4';
+
+    const body =
+      format === 'mp3'
+        ? { url: cleanUrl }
+        : { url: cleanUrl, quality };
+
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+
+    const responseText = await res.text();
+
+    let data: any;
+
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      throw new Error(
+        `Server returned an invalid response (${res.status})`
+      );
+    }
+
+    if (!res.ok || !data.success) {
+      throw new Error(
+        data.details ||
+        data.error ||
+        `Conversion failed (${res.status})`
+      );
+    }
+
+    clearInterval(timer);
+    setProgress(100);
+
+    setTimeout(() => {
+      setDownloadUrl(data.downloadUrl);
+      setFilename(
+        data.filename ||
+        (format === 'mp3' ? 'audio.mp3' : 'video.mp4')
+      );
+      setState('complete');
+    }, 400);
+
+  } catch (err: unknown) {
+    clearInterval(timer);
+
+    console.error('Conversion error:', err);
+
+    setError(
+      err instanceof Error
+        ? err.message
+        : 'Something went wrong.'
+    );
+
+    setState('error');
+  }
+};
     const timer = setInterval(() => {
       setProgress((p) => {
         const next = p + Math.random() * 4 + 1;
