@@ -36,7 +36,6 @@ export default function Converter() {
     setDownloadUrl('');
     setFilename('');
     setError('');
-    setDragOver(false);
 
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -57,7 +56,7 @@ export default function Converter() {
     setFileName(file.name);
   };
 
-  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
+  const handleDrop = (e: DragEvent) => {
     e.preventDefault();
     setDragOver(false);
 
@@ -66,7 +65,11 @@ export default function Converter() {
     }
   };
 
-  const handleUrlSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  // =========================
+  // URL CONVERSION
+  // =========================
+
+  const handleUrlSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
     const cleanUrl = url.trim();
@@ -80,8 +83,8 @@ export default function Converter() {
     setProgress(0);
 
     const timer = setInterval(() => {
-      setProgress((current) => {
-        const next = current + Math.random() * 4 + 1;
+      setProgress((p) => {
+        const next = p + Math.random() * 4 + 1;
         return next > 95 ? 95 : Math.round(next);
       });
     }, 350);
@@ -97,7 +100,7 @@ export default function Converter() {
           ? { url: cleanUrl }
           : { url: cleanUrl, quality };
 
-      const response = await fetch(endpoint, {
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -106,7 +109,7 @@ export default function Converter() {
         body: JSON.stringify(body),
       });
 
-      const responseText = await response.text();
+      const responseText = await res.text();
 
       let data: {
         success?: boolean;
@@ -120,20 +123,20 @@ export default function Converter() {
         data = JSON.parse(responseText);
       } catch {
         throw new Error(
-          `Server returned an invalid response (${response.status})`
+          `Server returned an invalid response (${res.status})`
         );
       }
 
-      if (!response.ok || !data.success) {
+      if (!res.ok || !data.success) {
         throw new Error(
           data.details ||
             data.error ||
-            `Conversion failed (${response.status})`
+            `Conversion failed (${res.status})`
         );
       }
 
       if (!data.downloadUrl) {
-        throw new Error('Conversion finished but no download was returned.');
+        throw new Error('Server did not return a download link.');
       }
 
       clearInterval(timer);
@@ -162,6 +165,10 @@ export default function Converter() {
     }
   };
 
+  // =========================
+  // FILE UPLOAD
+  // =========================
+
   const handleUploadSubmit = async () => {
     if (!selectedFile) {
       return;
@@ -177,9 +184,10 @@ export default function Converter() {
     try {
       const data = await new Promise<{
         success: boolean;
-        downloadUrl: string;
-        filename: string;
+        downloadUrl?: string;
+        filename?: string;
         error?: string;
+        details?: string;
       }>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
 
@@ -192,26 +200,31 @@ export default function Converter() {
         });
 
         xhr.onload = () => {
-          try {
-            const response = JSON.parse(xhr.responseText);
+          let response;
 
-            if (
-              xhr.status >= 200 &&
-              xhr.status < 300 &&
-              response.success
-            ) {
-              resolve(response);
-            } else {
-              reject(
-                new Error(
-                  response.error || 'Conversion failed'
-                )
-              );
-            }
+          try {
+            response = JSON.parse(xhr.responseText);
           } catch {
             reject(
               new Error(
                 `Server returned an invalid response (${xhr.status})`
+              )
+            );
+            return;
+          }
+
+          if (
+            xhr.status >= 200 &&
+            xhr.status < 300 &&
+            response.success
+          ) {
+            resolve(response);
+          } else {
+            reject(
+              new Error(
+                response.details ||
+                  response.error ||
+                  'Conversion failed'
               )
             );
           }
@@ -225,14 +238,20 @@ export default function Converter() {
         xhr.send(formData);
       });
 
+      if (!data.downloadUrl) {
+        throw new Error('Server did not return a download link.');
+      }
+
       setProgress(100);
 
       setTimeout(() => {
-        setDownloadUrl(data.downloadUrl);
+        setDownloadUrl(data.downloadUrl || '');
         setFilename(data.filename || 'audio.mp3');
         setState('complete');
       }, 400);
     } catch (err: unknown) {
+      console.error('Upload conversion error:', err);
+
       setError(
         err instanceof Error
           ? err.message
@@ -314,6 +333,7 @@ export default function Converter() {
       {/* IDLE */}
       {state === 'idle' && (
         <>
+          {/* URL */}
           {inputMode === 'url' && (
             <form onSubmit={handleUrlSubmit}>
               <div className="relative mb-6">
@@ -340,6 +360,7 @@ export default function Converter() {
             </form>
           )}
 
+          {/* FILE */}
           {inputMode === 'upload' && (
             <div>
               <div
