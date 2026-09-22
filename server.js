@@ -9,7 +9,6 @@ const app = express();
 
 const PORT = process.env.PORT || 3000;
 
-// Linux commands inside the Vercel container
 const YTDLP_PATH = process.env.YTDLP_PATH || "yt-dlp";
 const FFMPEG_PATH = process.env.FFMPEG_PATH || "/usr/bin/ffmpeg";
 
@@ -46,6 +45,11 @@ function fetchMetadata(url) {
       "--no-playlist",
       "--dump-single-json",
       "--no-warnings",
+
+      // Use YouTube's embedded player client
+      "--extractor-args",
+      "youtube:player_client=web_embedded",
+
       url,
     ];
 
@@ -122,17 +126,26 @@ app.post("/api/url-to-mp3", async (req, res) => {
 
   const args = [
     "--no-playlist",
+
     "-x",
     "--audio-format",
     "mp3",
     "--audio-quality",
     "0",
+
     "--ffmpeg-location",
     FFMPEG_PATH,
+
     "-o",
     outputTemplate,
+
     "--no-warnings",
     "--restrict-filenames",
+
+    // Use YouTube embedded player client
+    "--extractor-args",
+    "youtube:player_client=web_embedded",
+
     url,
   ];
 
@@ -161,8 +174,7 @@ app.post("/api/url-to-mp3", async (req, res) => {
         );
 
         return res.status(500).json({
-          error:
-            "Failed to convert the video.",
+          error: "Failed to convert the video.",
           details:
             stderr || error.message,
         });
@@ -254,10 +266,13 @@ app.post("/api/url-to-mp4", async (req, res) => {
   const qualityMap = {
     360:
       "bestvideo[height<=360][ext=mp4]+bestaudio[ext=m4a]/best[height<=360][ext=mp4]",
+
     480:
       "bestvideo[height<=480][ext=mp4]+bestaudio[ext=m4a]/best[height<=480][ext=mp4]",
+
     720:
       "bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[height<=720][ext=mp4]",
+
     1080:
       "bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080][ext=mp4]",
   };
@@ -268,16 +283,26 @@ app.post("/api/url-to-mp4", async (req, res) => {
 
   const args = [
     "--no-playlist",
+
     "-f",
     format,
+
     "--merge-output-format",
     "mp4",
+
     "--ffmpeg-location",
     FFMPEG_PATH,
+
     "-o",
     outputTemplate,
+
     "--no-warnings",
     "--restrict-filenames",
+
+    // Use YouTube embedded player client
+    "--extractor-args",
+    "youtube:player_client=web_embedded",
+
     url,
   ];
 
@@ -306,8 +331,7 @@ app.post("/api/url-to-mp4", async (req, res) => {
         );
 
         return res.status(500).json({
-          error:
-            "Failed to convert the video.",
+          error: "Failed to convert the video.",
           details:
             stderr || error.message,
         });
