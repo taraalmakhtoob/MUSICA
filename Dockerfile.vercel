@@ -10,7 +10,7 @@ RUN curl -fsSL https://deno.land/install.sh | sh
 
 ENV PATH="/root/.deno/bin:$PATH"
 
-RUN pip3 install --break-system-packages -U yt-dlp
+RUN pip3 install --break-system-packages -U "yt-dlp[default]"
 
 COPY package*.json ./
 
