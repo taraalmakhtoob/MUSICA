@@ -56,16 +56,16 @@ function cleanupFile(
 
 
 // ==========================================
-// COMMON YOUTUBE SETTINGS
+// YOUTUBE SETTINGS
 // ==========================================
 
-// The PO-token provider automatically supplies
-// tokens to yt-dlp when required.
+// IMPORTANT:
+// Do NOT force the mweb client here.
+// Your previous configuration forced mweb
+// while no PO-token provider was actually
+// running.
 
-const YOUTUBE_ARGS = [
-  "--extractor-args",
-  "youtube:player_client=mweb",
-];
+const YOUTUBE_ARGS = [];
 
 
 // ==========================================
@@ -651,7 +651,11 @@ app.listen(
     );
 
     console.log(
-      "PO-token provider expected at 127.0.0.1:4416"
+      `yt-dlp path: ${YTDLP_PATH}`
+    );
+
+    console.log(
+      `FFmpeg path: ${FFMPEG_PATH}`
     );
   }
 );
